@@ -179,6 +179,48 @@ moon-girl.md → moon-girl
 
 ---
 
+## Development Environment
+
+### Local Development
+
+Локальная среда разработки использует фиксированный порт:
+
+```text
+http://localhost:3010
+```
+
+### NPM Commands
+
+Запуск режима разработки:
+
+```bash
+npm run dev
+```
+
+Сборка проекта:
+
+```bash
+npm run build
+```
+
+Запуск production-сборки:
+
+```bash
+npm run start
+```
+
+### Port Convention
+
+Порт 3010 является стандартным портом проекта.
+
+Все локальные ссылки в документации, аудитах, тестовых сценариях и рабочих инструкциях должны использовать:
+
+```text
+http://localhost:3010
+```
+
+---
+
 ## Explicitly Out of Scope
 
 * комментарии;
