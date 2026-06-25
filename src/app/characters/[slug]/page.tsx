@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getCharacterBySlug } from "@/lib/characters";
+import { formatDate } from "@/lib/formatDate";
 
 type PageProps = {
   params: Promise<{
@@ -18,29 +19,33 @@ export default async function CharacterPage({
     notFound();
   }
 
+  const createdAt = formatDate(character.createdAt);
+
   return (
-    <main className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">
+    <main className="mx-auto max-w-3xl px-6 py-10">
+      <h1 className="mb-6 font-serif text-5xl font-light text-[#2C2A26]">
         {character.name}
       </h1>
 
       <img
         src={character.avatar}
         alt={character.name}
-        className="w-full max-w-md rounded mb-6"
+        className="mb-6 w-full max-w-md rounded-md"
       />
 
-      <p className="text-gray-700 mb-4">
+      <p className="mb-6 text-base leading-7 text-[#5F5A52]">
         {character.description}
       </p>
 
-      <div className="text-sm text-gray-500 mb-8">
-        Created: {String(character.createdAt)}
-      </div>
+      {createdAt && (
+        <div className="mb-8 font-mono text-xs text-[#8A8780]">
+          {createdAt}
+        </div>
+      )}
 
       {character.gallery.length > 0 && (
-        <>
-          <h2 className="text-2xl font-semibold mb-4">
+        <section>
+          <h2 className="mb-4 font-serif text-3xl font-light text-[#2C2A26]">
             Gallery
           </h2>
 
@@ -50,11 +55,11 @@ export default async function CharacterPage({
                 key={image}
                 src={image}
                 alt={character.name}
-                className="w-full rounded"
+                className="w-full rounded-md"
               />
             ))}
           </div>
-        </>
+        </section>
       )}
     </main>
   );

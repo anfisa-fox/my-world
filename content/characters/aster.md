@@ -1,10 +1,9 @@
 ---
 name: Aster
-avatar: /images/characters/aster/avatar.jpg
+avatar: /images/characters/aster/avatar.png
 description: Хранитель Библиотеки Снов и собиратель забытых воспоминаний.
 gallery:
-  - /images/characters/aster/gallery-1.jpg
-  - /images/characters/aster/gallery-2.jpg
+  - /images/characters/aster/avatar2.png
 createdAt: 2026-06-24
 ---
 
