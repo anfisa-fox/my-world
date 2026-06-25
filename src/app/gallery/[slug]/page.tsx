@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { getArtworkBySlug } from "@/lib/artworks";
+import { getAllArtworks, getArtworkBySlug } from "@/lib/artworks";
 import { formatDate } from "@/lib/formatDate";
 
 type PageProps = {
@@ -8,6 +8,14 @@ type PageProps = {
     slug: string;
   }>;
 };
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return getAllArtworks().map((artwork) => ({
+    slug: artwork.slug,
+  }));
+}
 
 export default async function ArtworkPage({ params }: PageProps) {
   const { slug } = await params;

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { getCharacterBySlug } from "@/lib/characters";
+import { getAllCharacters, getCharacterBySlug } from "@/lib/characters";
 import { formatDate } from "@/lib/formatDate";
 
 type PageProps = {
@@ -8,6 +8,14 @@ type PageProps = {
     slug: string;
   }>;
 };
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return getAllCharacters().map((character) => ({
+    slug: character.slug,
+  }));
+}
 
 export default async function CharacterPage({
   params,

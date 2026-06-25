@@ -1,13 +1,21 @@
 import { notFound } from "next/navigation";
 
 import { formatDate } from "@/lib/formatDate";
-import { getPostBySlug } from "@/lib/posts";
+import { getAllPosts, getPostBySlug } from "@/lib/posts";
 
 type PageProps = {
   params: Promise<{
     slug: string;
   }>;
 };
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return getAllPosts().map((post) => ({
+    slug: post.slug,
+  }));
+}
 
 export default async function PostPage({ params }: PageProps) {
   const { slug } = await params;
