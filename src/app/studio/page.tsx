@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 
 export default function StudioPage() {
+  const [studioSecret, setStudioSecret] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [result, setResult] = useState("");
@@ -17,6 +18,7 @@ export default function StudioPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-studio-secret": studioSecret,
         },
         body: JSON.stringify({
           title,
@@ -27,6 +29,11 @@ export default function StudioPage() {
       const data = await response.json();
 
       setResult(JSON.stringify(data, null, 2));
+
+      if (data.success) {
+        setTitle("");
+        setContent("");
+      }
     } catch {
       setResult("Ошибка запроса");
     }
@@ -43,9 +50,22 @@ export default function StudioPage() {
     >
       <h1>Creator Studio</h1>
 
-      <p>Первая проверка архитектурной цепочки.</p>
+      <p>Создание новой записи на Стене.</p>
 
       <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: 16 }}>
+          <input
+            type="password"
+            placeholder="Studio Secret"
+            value={studioSecret}
+            onChange={(e) => setStudioSecret(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 12,
+            }}
+          />
+        </div>
+
         <div style={{ marginBottom: 16 }}>
           <input
             placeholder="Название записи"
@@ -71,9 +91,7 @@ export default function StudioPage() {
           />
         </div>
 
-        <button type="submit">
-          Создать запись
-        </button>
+        <button type="submit">Создать запись</button>
       </form>
 
       <pre
