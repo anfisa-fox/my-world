@@ -1,125 +1,216 @@
 # Personal Creative World Documentation
 
-This directory contains the primary technical, product and design documentation for the **Personal Creative World** project.
+This directory contains the primary architectural, product and development documentation for the **Personal Creative World** project.
 
 The documentation is intended to support:
 
-* project maintenance;
-* onboarding of new developers;
-* independent technical audits;
-* future architectural evolution.
+- long-term project maintenance;
+- onboarding of new developers;
+- independent technical audits;
+- architectural reviews;
+- future product evolution.
+
+The documentation follows the principle:
+
+> **One document — one responsibility.**
+
+Each document has a clearly defined purpose and should be updated only when changes affect its scope.
 
 ---
 
 # Recommended Reading Order
 
-## 1. PROJECT_SNAPSHOT_v1.0_PRE_DEMO.md
+## 1. PROJECT_SNAPSHOT_v1.1_PRODUCTION.md
 
 **Primary entry point**
 
-Describes the current state of the project before the first demonstration.
+This document provides the current production snapshot of the project.
+
+It describes:
+
+- project status;
+- production readiness;
+- implemented functionality;
+- current architecture;
+- overall system maturity.
+
+Every new contributor should begin here.
+
+---
+
+## 2. architecture/creator-studio.md
+
+Complete architectural specification of the Creator Studio subsystem.
 
 Includes:
 
-* product overview;
-* project philosophy;
-* technical architecture;
-* content architecture;
-* UI architecture;
-* release readiness;
-* external audit objectives.
-
-This document should always be read first.
+- design goals;
+- publishing workflow;
+- production architecture;
+- security model;
+- GitHub integration;
+- implementation roadmap.
 
 ---
 
-## 2. product-definition.md
+## 3. product-definition.md
 
-Defines the long-term product vision.
-
-Describes:
-
-* project goals;
-* target audience;
-* product principles;
-* long-term direction.
-
----
-
-## 3. project-context.md
-
-Provides implementation context and development assumptions.
+Defines the long-term vision of the project.
 
 Includes:
 
-* project scope;
-* current constraints;
-* implementation decisions;
-* architectural context.
+- product goals;
+- audience;
+- guiding principles;
+- long-term direction.
 
 ---
 
-## 4. design/
+## 4. project-context.md
 
-Design documentation covering the visual language of the project.
+Provides implementation context.
+
+Includes:
+
+- project scope;
+- technical assumptions;
+- architectural constraints;
+- development context.
+
+---
+
+## 5. development/
+
+Development documentation.
 
 Currently includes:
 
-* design system;
-* interface principles;
-* visual guidelines.
+- roadmap;
+- architecture decisions.
 
 ---
 
-# Documentation Philosophy
+## 6. design/
 
-The documentation is intentionally organised into complementary layers rather than a single monolithic specification.
+Visual system documentation.
 
-Each document has a distinct responsibility:
+Includes:
 
-| Document             | Purpose                |
-| -------------------- | ---------------------- |
-| Project Snapshot     | Current implementation |
-| Product Definition   | Product vision         |
-| Project Context      | Development context    |
-| Design Documentation | Visual system          |
-
-Together these documents provide a complete understanding of the project without unnecessary duplication.
+- design system;
+- UI principles;
+- visual guidelines.
 
 ---
 
-# Versioning
+# Documentation Structure
 
-Major project milestones should be accompanied by an updated Project Snapshot.
+| Document | Responsibility |
+|-----------|----------------|
+| Project Snapshot | Current state of the project |
+| Creator Studio | Authoring subsystem architecture |
+| Product Definition | Product vision |
+| Project Context | Development context |
+| Roadmap | Future development |
+| Architecture Decisions | Accepted architectural decisions |
+| Design Documentation | Visual language |
+
+Each topic is documented in exactly one place.
+
+---
+
+# Documentation Principles
+
+The project documentation follows several principles.
+
+## Single Source of Truth
+
+Every architectural topic is described only once.
+
+Documentation should avoid duplication.
+
+---
+
+## Snapshot Versioning
+
+Project snapshots are immutable.
 
 Examples:
 
-* PROJECT_SNAPSHOT_v1.0_PRE_DEMO.md
-* PROJECT_SNAPSHOT_v1.1_PRE_RELEASE.md
-* PROJECT_SNAPSHOT_v2.0.md
+- PROJECT_SNAPSHOT_v1.0_PRE_DEMO.md
+- PROJECT_SNAPSHOT_v1.1_PRODUCTION.md
 
-This approach creates a historical record of the project's evolution while keeping each snapshot focused on a specific stage of development.
+A new snapshot is created for each major project milestone.
+
+Existing snapshots are preserved as historical records.
+
+---
+
+## Incremental Evolution
+
+Architecture documentation evolves together with the project.
+
+Only documents affected by a completed sprint should be updated.
 
 ---
 
 # Repository Structure
 
-The project follows a content-first architecture.
-
-Key directories include:
-
 ```text
-content/     Markdown content
-docs/        Documentation
-public/      Static assets
-src/         Application source code
-tmp/         Local working materials (not tracked by Git)
+content/        Markdown content
+
+docs/           Documentation
+
+public/         Static assets
+
+src/            Application source code
+
+functions/      Cloudflare Pages Functions
+
+tmp/            Local working materials (ignored)
 ```
 
 ---
 
-# Notes
+# Current Architecture
 
-The documentation should evolve together with the project.
+The project is based on a Git-first publishing workflow.
 
-Whenever significant architectural or product changes are introduced, the relevant documentation should be updated to ensure it continues to reflect the current implementation.
+```text
+Creator Studio
+
+        │
+
+        ▼
+
+Cloudflare Pages Function
+
+        │
+
+        ▼
+
+GitHub Repository
+
+        │
+
+        ▼
+
+Automatic Cloudflare Deployment
+
+        │
+
+        ▼
+
+Production Website
+```
+
+Git remains the single source of truth for all published content.
+
+---
+
+# Maintenance
+
+Documentation is maintained together with the codebase.
+
+Whenever a sprint introduces architectural changes, the affected documentation should be updated before the sprint is considered complete.
+
+This ensures that the documentation always reflects the current implementation rather than historical assumptions.

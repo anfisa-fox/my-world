@@ -1,246 +1,200 @@
 # Development Roadmap
 
 Project: Personal Creative World
-Version: MVP 1.0
+
+Current Version: MVP 1.1
+
+Last Updated: 2026-06-27
 
 ---
 
-# Project Status
+# Current Status
 
-Current Status:
+Current Stage:
 
 ```text
-Day 1 Complete
-Day 2 Complete (Audit Approved)
-Day 3 Not Started
+Production MVP
+
+✅ Public website deployed
+
+✅ Cloudflare Pages configured
+
+✅ Creator Studio Sprint 1 completed
+
+🔄 Creator Studio Sprint 2 planned
 ```
 
 ---
 
-# Day 1 — Infrastructure
+# Completed Milestones
+
+## Foundation
 
 Status: ✅ Completed
 
 Completed:
 
-* GitHub account created
-* GitHub repository created
-* Next.js project initialized
-* TypeScript configured
-* Tailwind CSS configured
-* App Router enabled
-* Local development environment configured
-* Development server running on port 3010
-* Repository synchronized with GitHub
-
-Deliverables:
-
-* Working local application
-* Clean Git history
-* Remote repository connected
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- App Router
+- GitHub Repository
+- Local Development Environment
 
 ---
 
-# Day 2 — Content Architecture
+## Content Architecture
 
 Status: ✅ Completed
 
 Completed:
 
-* Content directory structure defined
-* Content models designed
-* Markdown strategy defined
-* Slug strategy defined
-* Image strategy defined
-* Documentation structure created
-* Product documentation created
-* Project context documented
-* External architecture audit completed
-
-Approved architectural additions:
-
-* createdAt field for all content types
-* story field for Artwork
-* immutable slug policy
-* future soft relations direction
-
-Deliverables:
-
-```text
-content/
-  artworks/
-  characters/
-  posts/
-
-docs/
-```
+- Markdown content model
+- Artwork collection
+- Character collection
+- Post collection
+- Content loaders
+- Slug strategy
+- Image strategy
 
 ---
 
-# Day 3 — Gallery
+## Public Website
 
-Status: ⏳ Planned
+Status: ✅ Completed
+
+Implemented:
+
+- Home
+- Gallery
+- Artwork Details
+- Characters
+- Character Details
+- Wall
+- Post Details
+
+---
+
+## Production Deployment
+
+Status: ✅ Completed
+
+Infrastructure:
+
+- GitHub
+- Cloudflare Pages
+- Automatic Deployment
+
+Production website is fully operational.
+
+---
+
+## Creator Studio Sprint 1
+
+Status: ✅ Completed
+
+Implemented:
+
+- Production publishing
+- Studio Secret authentication
+- GitHub API integration
+- Cloudflare Pages Function
+- Automatic Markdown generation
+- Automatic production deployment
+- Slug generation
+
+Result:
+
+The author can publish new Wall posts directly from the production website.
+
+---
+
+# Current MVP
+
+The current MVP includes two major subsystems.
+
+## Public Website
+
+Visitors can:
+
+- browse artworks;
+- explore characters;
+- read Wall posts;
+- navigate the creative world.
+
+---
+
+## Creator Studio
+
+The author can:
+
+- publish new posts;
+- trigger automatic deployment;
+- manage content through Git.
+
+---
+
+# Next Development Sprint
+
+## Creator Studio Sprint 2
+
+Status:
+
+⏳ Planned
 
 Goals:
 
-* Markdown reading infrastructure
-* Artwork loader
-* Gallery page
-* Artwork detail page
-* Basic image rendering
-* Featured artwork support
-
-Expected routes:
-
-```text
-/gallery
-/gallery/[slug]
-```
+- Published posts list
+- Edit post
+- Delete post
+- Improved Studio interface
+- Better author workflow
 
 ---
 
-# Day 4 — Characters
+# Future Roadmap
 
-Status: ⏳ Planned
+## Creator Studio Sprint 3
 
-Goals:
+Planned:
 
-* Character loader
-* Character list page
-* Character detail page
-* Character gallery display
-
-Expected routes:
-
-```text
-/characters
-/characters/[slug]
-```
+- Image uploads
+- Drafts
+- Preview
+- Categories
+- Tags
 
 ---
 
-# Day 5 — Wall
-
-Status: ⏳ Planned
-
-Goals:
-
-* Post loader
-* Post list page
-* Post detail page
-
-Expected routes:
-
-```text
-/wall
-/wall/[slug]
-```
-
----
-
-# Day 6 — Home Page
-
-Status: ⏳ Planned
-
-Goals:
-
-* Welcome section
-* Author introduction
-* Featured artworks
-* Recent posts
-* Featured characters
-
-Expected route:
-
-```text
-/
-```
-
----
-
-# Day 7 — Content & Launch
-
-Status: ⏳ Planned
-
-Goals:
-
-* Initial content import
-* Quality assurance
-* Bug fixing
-* Responsive testing
-* Deployment to Cloudflare Pages
-
-Success Criteria:
-
-* Site publicly available
-* Author can independently add content
-* Initial content published
-
----
-
-# Post-MVP Roadmap
-
-## Phase 2 — Content Organization
+## Creator Studio Sprint 4
 
 Potential additions:
 
-* tag pages
-* gallery filtering
-* archive improvements
-* timeline views
+- Scheduled publishing
+- Media library
+- Search
+- Content collections
 
 ---
 
-## Phase 3 — Interest Areas
+## Long-Term Vision
 
-Potential additions:
+Potential future features:
 
-* MLP section
-* Genshin section
-* future fandom areas
-
----
-
-## Phase 4 — Soft Relations
-
-Potential additions:
-
-Relations between:
-
-* Artwork
-* Character
-* Post
-
-Examples:
-
-* character evolution
-* related sketches
-* related diary entries
-
----
-
-## Phase 5 — Community Features
-
-Potential additions:
-
-* guestbook
-* comments
-* reactions
-
----
-
-## Phase 6 — Private Features
-
-Potential additions:
-
-* friend circle
-* private sections
-* collaborative content
+- GitHub App authentication
+- Role-based permissions
+- Multi-author support
+- Advanced publishing workflow
 
 ---
 
 # Guiding Principle
 
-Every feature should answer:
+Every new feature must simplify long-term creative work.
 
-"Will this help the author create and publish more often?"
+Technology serves the author.
+
+Content remains the primary asset of the project.
+
+Git remains the single source of truth.
