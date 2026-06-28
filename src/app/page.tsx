@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AuthorModeGate } from "@/components/author-mode/AuthorModeGate";
 import { getAllArtworks } from "@/lib/artworks";
 import { getAllCharacters } from "@/lib/characters";
 import { formatDate } from "@/lib/formatDate";
@@ -172,7 +173,7 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-border px-7 py-5 text-center font-serif text-[13px] italic text-muted-light">
-        этот мир растёт вместе со своим автором ✦
+        этот мир растёт вместе со своим автором <AuthorModeGate />
       </footer>
     </main>
   );

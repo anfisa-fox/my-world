@@ -47,8 +47,15 @@ export function getPostBySlug(slug: string): Post {
 }
 
 export function getAllPosts(): Post[] {
-  return getPostSlugs().map((fileName) => {
-    const slug = getSlugFromFileName(fileName);
-    return getPostBySlug(slug);
-  });
+  return getPostSlugs()
+    .map((fileName) => {
+      const slug = getSlugFromFileName(fileName);
+      return getPostBySlug(slug);
+    })
+    .sort((firstPost, secondPost) => {
+      return (
+        new Date(secondPost.createdAt).getTime() -
+        new Date(firstPost.createdAt).getTime()
+      );
+    });
 }

@@ -1,7 +1,8 @@
 import Link from "next/link";
 
-import { getAllPosts } from "@/lib/posts";
+import { AuthorWallCreateCard } from "@/components/author-mode/AuthorWallCreateCard";
 import { formatDate } from "@/lib/formatDate";
+import { getAllPosts } from "@/lib/posts";
 
 export default function WallPage() {
   const posts = getAllPosts();
@@ -13,6 +14,8 @@ export default function WallPage() {
       </h1>
 
       <div className="space-y-8">
+        <AuthorWallCreateCard />
+
         {posts.map((post) => (
           <Link
             key={post.slug}
