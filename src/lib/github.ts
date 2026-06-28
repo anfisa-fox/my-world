@@ -27,6 +27,10 @@ function requireGitHubConfig() {
   };
 }
 
+function toYamlString(value: string) {
+  return JSON.stringify(value);
+}
+
 function createPostMarkdown({
   title,
   slug,
@@ -35,10 +39,10 @@ function createPostMarkdown({
   const createdAt = new Date().toISOString().slice(0, 10);
 
   return `---
-title: ${title}
-slug: ${slug}
-content: ${content}
-createdAt: ${createdAt}
+title: ${toYamlString(title)}
+slug: ${toYamlString(slug)}
+content: ${toYamlString(content)}
+createdAt: ${toYamlString(createdAt)}
 ---
 `;
 }
