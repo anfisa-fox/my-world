@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { AuthorPostActions } from "@/components/author-mode/AuthorPostActions";
 import { formatDate } from "@/lib/formatDate";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
 
@@ -43,6 +44,12 @@ export default async function PostPage({ params }: PageProps) {
         </div>
       )}
 
+      <AuthorPostActions
+        slug={post.slug}
+        title={post.title}
+        content={post.content}
+      />
+
       {post.image && (
         <img
           src={post.image}
@@ -51,7 +58,7 @@ export default async function PostPage({ params }: PageProps) {
         />
       )}
 
-      <article className="text-base leading-8 text-[#3E3A34]">
+      <article className="whitespace-pre-wrap text-base leading-8 text-[#3E3A34]">
         {post.content}
       </article>
     </main>
