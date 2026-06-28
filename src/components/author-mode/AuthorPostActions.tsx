@@ -115,6 +115,7 @@ export function AuthorPostActions({
         },
         body: JSON.stringify({
           slug,
+          title,
         }),
       });
 
