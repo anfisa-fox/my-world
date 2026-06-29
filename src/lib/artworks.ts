@@ -4,11 +4,7 @@ import matter from "gray-matter";
 
 import { Artwork } from "@/types/artwork";
 
-const artworksDirectory = path.join(
-  process.cwd(),
-  "content",
-  "artworks"
-);
+const artworksDirectory = path.join(process.cwd(), "content", "artworks");
 
 function getArtworkSlugs(): string[] {
   return fs
@@ -20,20 +16,24 @@ function getSlugFromFileName(fileName: string): string {
   return fileName.replace(/\.md$/, "");
 }
 
+function getCreatedAtTime(value: string | undefined): number {
+  if (!value) {
+    return 0;
+  }
+
+  const time = new Date(value).getTime();
+
+  return Number.isNaN(time) ? 0 : time;
+}
+
 export function getArtworkBySlug(slug: string): Artwork {
   if (!slug) {
     throw new Error("Slug is required");
   }
 
-  const filePath = path.join(
-    artworksDirectory,
-    `${slug}.md`
-  );
+  const filePath = path.join(artworksDirectory, `${slug}.md`);
 
-  const fileContents = fs.readFileSync(
-    filePath,
-    "utf8"
-  );
+  const fileContents = fs.readFileSync(filePath, "utf8");
 
   const { data } = matter(fileContents);
 
@@ -51,8 +51,13 @@ export function getArtworkBySlug(slug: string): Artwork {
 }
 
 export function getAllArtworks(): Artwork[] {
-  return getArtworkSlugs().map((fileName) => {
-    const slug = getSlugFromFileName(fileName);
-    return getArtworkBySlug(slug);
-  });
+  return getArtworkSlugs()
+    .map((fileName) => {
+      const slug = getSlugFromFileName(fileName);
+      return getArtworkBySlug(slug);
+    })
+    .sort(
+      (a, b) =>
+        getCreatedAtTime(b.createdAt) - getCreatedAtTime(a.createdAt)
+    );
 }

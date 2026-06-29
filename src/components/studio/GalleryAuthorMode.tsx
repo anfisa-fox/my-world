@@ -12,6 +12,7 @@ export function GalleryAuthorMode() {
   const [isOpen, setIsOpen] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [message, setMessage] = useState("");
+  const [pendingArtworkTitle, setPendingArtworkTitle] = useState("");
 
   if (!isAuthorMode) {
     return null;
@@ -28,6 +29,7 @@ export function GalleryAuthorMode() {
 
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const title = formData.get("title");
 
     setSubmitState("saving");
     setMessage("Секундочку, я сохраняю новую работу.");
@@ -46,10 +48,10 @@ export function GalleryAuthorMode() {
       }
 
       form.reset();
+      setPendingArtworkTitle(typeof title === "string" ? title : "");
+      setIsOpen(false);
       setSubmitState("success");
-      setMessage(
-        "Готово! Я уже отправил новую работу на публикацию. Обычно она появляется в галерее через пару минут."
-      );
+      setMessage("");
     } catch {
       setSubmitState("error");
       setMessage("Кажется, что-то пошло не так. Попробуем ещё раз?");
@@ -58,27 +60,46 @@ export function GalleryAuthorMode() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => {
-          setIsOpen(true);
-          setSubmitState("idle");
-          setMessage("");
-        }}
-        className="min-h-[420px] rounded-md border border-dashed border-[#D8D1C7] bg-white/60 px-6 py-10 text-left transition hover:-translate-y-1 hover:bg-white"
-      >
-        <div className="flex h-full flex-col items-center justify-center text-center">
-          <span className="font-serif text-6xl font-light text-[#8BA888]">
-            ＋
-          </span>
-          <span className="mt-4 font-serif text-2xl font-light text-[#2C2A26]">
-            Добавить рисунок
-          </span>
-          <span className="mt-2 max-w-[220px] text-sm leading-6 text-[#6E6A64]">
-            Что сегодня появится в галерее?
-          </span>
-        </div>
-      </button>
+      {pendingArtworkTitle ? (
+        <article className="min-h-[420px] rounded-md border border-dashed border-[#D8D1C7] bg-white/70 px-6 py-10">
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <span className="font-serif text-5xl font-light text-[#8BA888]">
+              ✦
+            </span>
+
+            <h2 className="mt-5 font-serif text-2xl font-light text-[#2C2A26]">
+              {pendingArtworkTitle}
+            </h2>
+
+            <p className="mt-3 max-w-[240px] text-sm leading-6 text-[#6E6A64]">
+              Работа отправлена на публикацию. Она появится здесь через 1–2
+              минуты.
+            </p>
+          </div>
+        </article>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen(true);
+            setSubmitState("idle");
+            setMessage("");
+          }}
+          className="min-h-[420px] w-full rounded-md border border-dashed border-[#D8D1C7] bg-white/60 px-6 py-10 text-left transition hover:-translate-y-1 hover:bg-white"
+        >
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <span className="font-serif text-6xl font-light text-[#8BA888]">
+              ＋
+            </span>
+            <span className="mt-4 font-serif text-2xl font-light text-[#2C2A26]">
+              Добавить рисунок
+            </span>
+            <span className="mt-2 max-w-[220px] text-sm leading-6 text-[#6E6A64]">
+              Что сегодня появится в галерее?
+            </span>
+          </div>
+        </button>
+      )}
 
       {isOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2C2A26]/30 px-4 py-8 backdrop-blur-sm">
@@ -116,9 +137,7 @@ export function GalleryAuthorMode() {
               </label>
 
               <label className="block">
-                <span className="text-sm text-[#6E6A64]">
-                  Выбрать рисунок
-                </span>
+                <span className="text-sm text-[#6E6A64]">Выбрать рисунок</span>
                 <input
                   name="image"
                   type="file"
@@ -157,14 +176,14 @@ export function GalleryAuthorMode() {
                 />
               </label>
 
-              {message ? (
-                <p
-                  className={`rounded-md px-4 py-3 text-sm leading-6 ${
-                    submitState === "error"
-                      ? "bg-[#F8EAEA] text-[#7A3A3A]"
-                      : "bg-[#EEF3ED] text-[#3F5942]"
-                  }`}
-                >
+              {message && submitState === "saving" ? (
+                <p className="rounded-md bg-[#EEF3ED] px-4 py-3 text-sm leading-6 text-[#3F5942]">
+                  {message}
+                </p>
+              ) : null}
+
+              {message && submitState === "error" ? (
+                <p className="rounded-md bg-[#F8EAEA] px-4 py-3 text-sm leading-6 text-[#7A3A3A]">
                   {message}
                 </p>
               ) : null}
@@ -183,8 +202,7 @@ export function GalleryAuthorMode() {
                   disabled={submitState === "saving"}
                   className="rounded-full bg-[#8BA888] px-5 py-2 text-sm text-white disabled:opacity-60"
                 >
-                  ✔{" "}
-                  {submitState === "saving" ? "Сохраняю" : "Опубликовать"}
+                  ✔ {submitState === "saving" ? "Сохраняю" : "Опубликовать"}
                 </button>
               </div>
             </form>
