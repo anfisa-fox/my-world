@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { useAuthorMode } from "@/components/author-mode/AuthorModeProvider";
 
@@ -8,8 +8,19 @@ type SubmitState = "idle" | "saving" | "error";
 
 type PendingArtwork = {
   id: string;
+  slug: string;
   title: string;
   createdAt: number;
+};
+
+type GalleryAuthorModeProps = {
+  publishedArtworkSlugs: string[];
+};
+
+type CreateArtworkResponse = {
+  success?: boolean;
+  slug?: string;
+  error?: string;
 };
 
 const PENDING_ARTWORKS_STORAGE_KEY = "gallery-pending-artworks";
@@ -23,12 +34,23 @@ function createPendingArtworkId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-function getFreshPendingArtworks(artworks: PendingArtwork[]) {
-  const now = Date.now();
+function normalizeSlug(value: string) {
+  return value.trim().toLowerCase();
+}
 
-  return artworks.filter(
-    (artwork) => now - artwork.createdAt < PENDING_ARTWORK_TTL_MS
-  );
+function getFreshPendingArtworks(
+  artworks: PendingArtwork[],
+  publishedArtworkSlugs: string[] = []
+) {
+  const now = Date.now();
+  const publishedSlugSet = new Set(publishedArtworkSlugs.map(normalizeSlug));
+
+  return artworks.filter((artwork) => {
+    const isFresh = now - artwork.createdAt < PENDING_ARTWORK_TTL_MS;
+    const isPublished = publishedSlugSet.has(normalizeSlug(artwork.slug));
+
+    return isFresh && !isPublished;
+  });
 }
 
 function parsePendingArtwork(item: unknown): PendingArtwork | null {
@@ -49,14 +71,20 @@ function parsePendingArtwork(item: unknown): PendingArtwork | null {
       ? item.id
       : `${item.createdAt}-${item.title}`;
 
+  const slug =
+    "slug" in item && typeof item.slug === "string" ? item.slug : "";
+
   return {
     id,
+    slug,
     title: item.title,
     createdAt: item.createdAt,
   };
 }
 
-function readPendingArtworksFromSessionStorage(): PendingArtwork[] {
+function readPendingArtworksFromSessionStorage(
+  publishedArtworkSlugs: string[] = []
+): PendingArtwork[] {
   if (typeof window === "undefined") {
     return [];
   }
@@ -79,25 +107,31 @@ function readPendingArtworksFromSessionStorage(): PendingArtwork[] {
     return getFreshPendingArtworks(
       parsedValue
         .map((item) => parsePendingArtwork(item))
-        .filter((item): item is PendingArtwork => item !== null)
+        .filter((item): item is PendingArtwork => item !== null),
+      publishedArtworkSlugs
     );
   } catch {
     return [];
   }
 }
 
-function writePendingArtworksToSessionStorage(artworks: PendingArtwork[]) {
+function writePendingArtworksToSessionStorage(
+  artworks: PendingArtwork[],
+  publishedArtworkSlugs: string[] = []
+) {
   if (typeof window === "undefined") {
     return;
   }
 
   window.sessionStorage.setItem(
     PENDING_ARTWORKS_STORAGE_KEY,
-    JSON.stringify(getFreshPendingArtworks(artworks))
+    JSON.stringify(getFreshPendingArtworks(artworks, publishedArtworkSlugs))
   );
 }
 
-export function GalleryAuthorMode() {
+export function GalleryAuthorMode({
+  publishedArtworkSlugs,
+}: GalleryAuthorModeProps) {
   const { isAuthorMode, studioSecret } = useAuthorMode();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -105,31 +139,51 @@ export function GalleryAuthorMode() {
   const [message, setMessage] = useState("");
   const [pendingArtworks, setPendingArtworks] = useState<PendingArtwork[]>([]);
 
+  const stablePublishedArtworkSlugs = useMemo(
+    () => publishedArtworkSlugs.map(normalizeSlug),
+    [publishedArtworkSlugs]
+  );
+
   useEffect(() => {
-    const freshPendingArtworks = readPendingArtworksFromSessionStorage();
+    const freshPendingArtworks = readPendingArtworksFromSessionStorage(
+      stablePublishedArtworkSlugs
+    );
 
     setPendingArtworks(freshPendingArtworks);
-    writePendingArtworksToSessionStorage(freshPendingArtworks);
-  }, []);
+    writePendingArtworksToSessionStorage(
+      freshPendingArtworks,
+      stablePublishedArtworkSlugs
+    );
+  }, [stablePublishedArtworkSlugs]);
 
   if (!isAuthorMode) {
     return null;
   }
 
-  function addPendingArtwork(title: string) {
+  function addPendingArtwork({
+    slug,
+    title,
+  }: {
+    slug: string;
+    title: string;
+  }) {
     const pendingArtwork: PendingArtwork = {
       id: createPendingArtworkId(),
+      slug,
       title,
       createdAt: Date.now(),
     };
 
     setPendingArtworks((currentPendingArtworks) => {
-      const freshPendingArtworks = getFreshPendingArtworks([
-        pendingArtwork,
-        ...currentPendingArtworks,
-      ]);
+      const freshPendingArtworks = getFreshPendingArtworks(
+        [pendingArtwork, ...currentPendingArtworks],
+        stablePublishedArtworkSlugs
+      );
 
-      writePendingArtworksToSessionStorage(freshPendingArtworks);
+      writePendingArtworksToSessionStorage(
+        freshPendingArtworks,
+        stablePublishedArtworkSlugs
+      );
 
       return freshPendingArtworks;
     });
@@ -164,8 +218,17 @@ export function GalleryAuthorMode() {
         throw new Error("Could not publish artwork.");
       }
 
+      const result = (await response.json()) as CreateArtworkResponse;
+
+      if (!result.slug) {
+        throw new Error("Artwork slug was not returned.");
+      }
+
       form.reset();
-      addPendingArtwork(typeof title === "string" ? title : "Новая работа");
+      addPendingArtwork({
+        slug: result.slug,
+        title: typeof title === "string" ? title : "Новая работа",
+      });
       setIsOpen(false);
       setSubmitState("idle");
       setMessage("");
@@ -174,7 +237,6 @@ export function GalleryAuthorMode() {
       setMessage("Кажется, что-то пошло не так. Попробуем ещё раз?");
     }
   }
-
   return (
     <>
       <button
@@ -190,9 +252,11 @@ export function GalleryAuthorMode() {
           <span className="font-serif text-6xl font-light text-[#8BA888]">
             ＋
           </span>
+
           <span className="mt-4 font-serif text-2xl font-light text-[#2C2A26]">
             Добавить рисунок
           </span>
+
           <span className="mt-2 max-w-[220px] text-sm leading-6 text-[#6E6A64]">
             Что сегодня появится в галерее?
           </span>
@@ -229,6 +293,7 @@ export function GalleryAuthorMode() {
                 <h2 className="font-serif text-3xl font-light text-[#2C2A26]">
                   Добавить рисунок
                 </h2>
+
                 <p className="mt-2 text-sm leading-6 text-[#6E6A64]">
                   Я помогу бережно добавить новую работу в галерею.
                 </p>
@@ -249,6 +314,7 @@ export function GalleryAuthorMode() {
                 <span className="text-sm text-[#6E6A64]">
                   Как назовём рисунок?
                 </span>
+
                 <input
                   name="title"
                   required
@@ -257,7 +323,10 @@ export function GalleryAuthorMode() {
               </label>
 
               <label className="block">
-                <span className="text-sm text-[#6E6A64]">Выбрать рисунок</span>
+                <span className="text-sm text-[#6E6A64]">
+                  Выбрать рисунок
+                </span>
+
                 <input
                   name="image"
                   type="file"
@@ -271,6 +340,7 @@ export function GalleryAuthorMode() {
                 <span className="text-sm text-[#6E6A64]">
                   Что хочется рассказать об этой работе?
                 </span>
+
                 <textarea
                   name="description"
                   rows={4}
@@ -280,6 +350,7 @@ export function GalleryAuthorMode() {
 
               <label className="block">
                 <span className="text-sm text-[#6E6A64]">Теги</span>
+
                 <input
                   name="tags"
                   placeholder="акварель, облака, мечта"
@@ -289,6 +360,7 @@ export function GalleryAuthorMode() {
 
               <label className="block">
                 <span className="text-sm text-[#6E6A64]">Период</span>
+
                 <input
                   name="period"
                   placeholder="2026"
@@ -322,7 +394,10 @@ export function GalleryAuthorMode() {
                   disabled={submitState === "saving"}
                   className="rounded-full bg-[#8BA888] px-5 py-2 text-sm text-white disabled:opacity-60"
                 >
-                  ✔ {submitState === "saving" ? "Сохраняю" : "Опубликовать"}
+                  ✔{" "}
+                  {submitState === "saving"
+                    ? "Сохраняю"
+                    : "Опубликовать"}
                 </button>
               </div>
             </form>

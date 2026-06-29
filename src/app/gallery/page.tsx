@@ -5,6 +5,7 @@ import { getAllArtworks } from "@/lib/artworks";
 
 export default function GalleryPage() {
   const artworks = getAllArtworks();
+  const publishedArtworkSlugs = artworks.map((artwork) => artwork.slug);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -13,7 +14,7 @@ export default function GalleryPage() {
       </h1>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <GalleryAuthorMode />
+        <GalleryAuthorMode publishedArtworkSlugs={publishedArtworkSlugs} />
 
         {artworks.map((art) => (
           <Link key={art.slug} href={`/gallery/${art.slug}`} className="group">
