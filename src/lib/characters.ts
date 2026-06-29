@@ -48,8 +48,14 @@ export function getCharacterBySlug(slug: string): Character {
 }
 
 export function getAllCharacters(): Character[] {
-  return getCharacterSlugs().map((fileName) => {
-    const slug = getSlugFromFileName(fileName);
-    return getCharacterBySlug(slug);
-  });
+  return getCharacterSlugs()
+    .map((fileName) => {
+      const slug = getSlugFromFileName(fileName);
+      return getCharacterBySlug(slug);
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+    );
 }
