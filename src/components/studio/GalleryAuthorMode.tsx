@@ -2,16 +2,16 @@
 
 import { FormEvent, useState } from "react";
 
+import { useAuthorMode } from "@/components/author-mode/AuthorModeProvider";
+
 type SubmitState = "idle" | "saving" | "success" | "error";
 
 export function GalleryAuthorMode() {
+  const { isAuthorMode, studioSecret } = useAuthorMode();
+
   const [isOpen, setIsOpen] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [message, setMessage] = useState("");
-
-  const isAuthorMode =
-    typeof window !== "undefined" &&
-    window.localStorage.getItem("studio-secret");
 
   if (!isAuthorMode) {
     return null;
@@ -19,8 +19,6 @@ export function GalleryAuthorMode() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    const studioSecret = window.localStorage.getItem("studio-secret");
 
     if (!studioSecret) {
       setSubmitState("error");
@@ -186,9 +184,7 @@ export function GalleryAuthorMode() {
                   className="rounded-full bg-[#8BA888] px-5 py-2 text-sm text-white disabled:opacity-60"
                 >
                   ✔{" "}
-                  {submitState === "saving"
-                    ? "Сохраняю"
-                    : "Опубликовать"}
+                  {submitState === "saving" ? "Сохраняю" : "Опубликовать"}
                 </button>
               </div>
             </form>
