@@ -33,6 +33,26 @@ export type CreateArtworkInput = {
   story?: string;
 };
 
+export type CreateArtworkWithImageInput = {
+  title: string;
+  imageFile: File;
+  description: string;
+  tags: string[];
+  period: string;
+  featured?: boolean;
+  story?: string;
+};
+
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
+const ALLOWED_IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"] as const;
+
+const ALLOWED_IMAGE_TYPES: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+};
+
 export function validateStudioSecret(request: Request, env: Env) {
   const studioSecret = request.headers.get("x-studio-secret");
 
@@ -175,6 +195,50 @@ function encodeBase64(value: string) {
   return btoa(unescape(encodeURIComponent(value)));
 }
 
+function encodeArrayBufferBase64(buffer: ArrayBuffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary);
+}
+
+function getImageExtension(file: File) {
+  const extensionFromType = ALLOWED_IMAGE_TYPES[file.type];
+
+  if (extensionFromType) {
+    return extensionFromType;
+  }
+
+  const extensionFromName = file.name.split(".").pop()?.toLowerCase();
+
+  if (
+    extensionFromName &&
+    ALLOWED_IMAGE_EXTENSIONS.includes(
+      extensionFromName as (typeof ALLOWED_IMAGE_EXTENSIONS)[number]
+    )
+  ) {
+    return extensionFromName;
+  }
+
+  throw new Error("Unsupported image type.");
+}
+
+async function validateImageFile(file: File) {
+  if (file.size <= 0) {
+    throw new Error("Image file is empty.");
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    throw new Error("Image file is too large. Maximum size is 5 MB.");
+  }
+
+  getImageExtension(file);
+}
+
 async function githubRequest({
   env,
   path,
@@ -265,6 +329,31 @@ async function putMarkdown({
   return {
     slug,
   };
+}
+
+async function putBinaryFile({
+  env,
+  path,
+  title,
+  content,
+}: {
+  env: Env;
+  path: string;
+  title: string;
+  content: string;
+}) {
+  const config = requireGitHubConfig(env);
+
+  await githubRequest({
+    env,
+    method: "PUT",
+    path: `contents/${path}`,
+    body: {
+      message: `Creator Studio: upload image for "${title}"`,
+      content,
+      branch: config.branch,
+    },
+  });
 }
 
 async function deleteMarkdown({
@@ -364,6 +453,53 @@ export async function createArtwork(env: Env, input: CreateArtworkInput) {
     title: input.title,
     slug,
     image: input.image ?? "",
+    description: input.description ?? "",
+    tags: input.tags ?? [],
+    period: input.period ?? "",
+    featured: input.featured ?? false,
+    story: input.story ?? "",
+    createdAt,
+  });
+
+  return putMarkdown({
+    env,
+    folder: "artworks",
+    slug,
+    title: input.title,
+    markdown,
+    action: "create",
+  });
+}
+
+export async function createArtworkWithImage(
+  env: Env,
+  input: CreateArtworkWithImageInput
+) {
+  const slug = slugify(input.title);
+  const createdAt = new Date().toISOString().slice(0, 10);
+
+  if (!slug) {
+    throw new Error("Could not generate slug from title.");
+  }
+
+  await validateImageFile(input.imageFile);
+
+  const extension = getImageExtension(input.imageFile);
+  const imagePath = `/images/artworks/${slug}.${extension}`;
+  const repositoryImagePath = `public/images/artworks/${slug}.${extension}`;
+  const imageContent = encodeArrayBufferBase64(await input.imageFile.arrayBuffer());
+
+  await putBinaryFile({
+    env,
+    path: repositoryImagePath,
+    title: input.title,
+    content: imageContent,
+  });
+
+  const markdown = createArtworkMarkdown({
+    title: input.title,
+    slug,
+    image: imagePath,
     description: input.description ?? "",
     tags: input.tags ?? [],
     period: input.period ?? "",

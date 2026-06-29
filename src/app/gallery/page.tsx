@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { GalleryAuthorMode } from "@/components/studio/GalleryAuthorMode";
 import { getAllArtworks } from "@/lib/artworks";
 
 export default function GalleryPage() {
@@ -12,12 +13,10 @@ export default function GalleryPage() {
       </h1>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <GalleryAuthorMode />
+
         {artworks.map((art) => (
-          <Link
-            key={art.slug}
-            href={`/gallery/${art.slug}`}
-            className="group"
-          >
+          <Link key={art.slug} href={`/gallery/${art.slug}`} className="group">
             <article className="overflow-hidden rounded-md bg-white transition-transform duration-200 group-hover:-translate-y-1">
               <div className="aspect-[3/4] overflow-hidden">
                 <img
