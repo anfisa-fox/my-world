@@ -23,6 +23,16 @@ export type DeletePostInput = {
   title: string;
 };
 
+export type CreateArtworkInput = {
+  title: string;
+  image: string;
+  description: string;
+  tags: string[];
+  period: string;
+  featured: boolean;
+  story?: string;
+};
+
 export function validateStudioSecret(request: Request, env: Env) {
   const studioSecret = request.headers.get("x-studio-secret");
 
@@ -113,6 +123,14 @@ function toYamlString(value: string) {
   return JSON.stringify(value);
 }
 
+function toYamlBoolean(value: boolean) {
+  return value ? "true" : "false";
+}
+
+function toYamlStringArray(values: string[]) {
+  return `[${values.map((value) => toYamlString(value)).join(", ")}]`;
+}
+
 function createPostMarkdown({
   title,
   slug,
@@ -124,6 +142,31 @@ title: ${toYamlString(title)}
 slug: ${toYamlString(slug)}
 content: ${toYamlString(content)}
 createdAt: ${toYamlString(createdAt)}
+---
+`;
+}
+
+function createArtworkMarkdown({
+  title,
+  slug,
+  image,
+  description,
+  tags,
+  period,
+  featured,
+  story,
+  createdAt,
+}: CreateArtworkInput & { slug: string; createdAt: string }) {
+  return `---
+title: ${toYamlString(title)}
+slug: ${toYamlString(slug)}
+image: ${toYamlString(image)}
+description: ${toYamlString(description)}
+tags: ${toYamlStringArray(tags)}
+period: ${toYamlString(period)}
+featured: ${toYamlBoolean(featured)}
+createdAt: ${toYamlString(createdAt)}
+story: ${toYamlString(story ?? "")}
 ---
 `;
 }
@@ -166,13 +209,13 @@ async function githubRequest({
   return response.json();
 }
 
-async function getPostFileSha(env: Env, slug: string) {
+async function getFileSha(env: Env, folder: string, slug: string) {
   const config = requireGitHubConfig(env);
 
   const data = await githubRequest({
     env,
     method: "GET",
-    path: `contents/content/posts/${slug}.md?ref=${config.branch}`,
+    path: `contents/content/${folder}/${slug}.md?ref=${config.branch}`,
   });
 
   if (
@@ -182,14 +225,79 @@ async function getPostFileSha(env: Env, slug: string) {
     !("sha" in data) ||
     typeof data.sha !== "string"
   ) {
-    throw new Error("Post file was not found.");
+    throw new Error("Content file was not found.");
   }
 
   return data.sha;
 }
 
-export async function createPost(env: Env, input: CreatePostInput) {
+async function putMarkdown({
+  env,
+  folder,
+  slug,
+  title,
+  markdown,
+  action,
+  sha,
+}: {
+  env: Env;
+  folder: string;
+  slug: string;
+  title: string;
+  markdown: string;
+  action: "create" | "update";
+  sha?: string;
+}) {
   const config = requireGitHubConfig(env);
+
+  await githubRequest({
+    env,
+    method: "PUT",
+    path: `contents/content/${folder}/${slug}.md`,
+    body: {
+      message: `Creator Studio: ${action} "${title}"`,
+      content: encodeBase64(markdown),
+      branch: config.branch,
+      ...(sha ? { sha } : {}),
+    },
+  });
+
+  return {
+    slug,
+  };
+}
+
+async function deleteMarkdown({
+  env,
+  folder,
+  slug,
+  title,
+}: {
+  env: Env;
+  folder: string;
+  slug: string;
+  title: string;
+}) {
+  const config = requireGitHubConfig(env);
+  const sha = await getFileSha(env, folder, slug);
+
+  await githubRequest({
+    env,
+    method: "DELETE",
+    path: `contents/content/${folder}/${slug}.md`,
+    body: {
+      message: `Creator Studio: delete "${title}"`,
+      branch: config.branch,
+      sha,
+    },
+  });
+
+  return {
+    slug,
+  };
+}
+
+export async function createPost(env: Env, input: CreatePostInput) {
   const slug = slugify(input.title);
   const createdAt = new Date().toISOString().slice(0, 10);
 
@@ -204,25 +312,18 @@ export async function createPost(env: Env, input: CreatePostInput) {
     createdAt,
   });
 
-  await githubRequest({
+  return putMarkdown({
     env,
-    method: "PUT",
-    path: `contents/content/posts/${slug}.md`,
-    body: {
-      message: `Creator Studio: create "${input.title}"`,
-      content: encodeBase64(markdown),
-      branch: config.branch,
-    },
-  });
-
-  return {
+    folder: "posts",
     slug,
-  };
+    title: input.title,
+    markdown,
+    action: "create",
+  });
 }
 
 export async function updatePost(env: Env, input: UpdatePostInput) {
-  const config = requireGitHubConfig(env);
-  const sha = await getPostFileSha(env, input.slug);
+  const sha = await getFileSha(env, "posts", input.slug);
 
   const markdown = createPostMarkdown({
     title: input.title,
@@ -231,39 +332,52 @@ export async function updatePost(env: Env, input: UpdatePostInput) {
     createdAt: input.createdAt,
   });
 
-  await githubRequest({
+  return putMarkdown({
     env,
-    method: "PUT",
-    path: `contents/content/posts/${input.slug}.md`,
-    body: {
-      message: `Creator Studio: update "${input.title}"`,
-      content: encodeBase64(markdown),
-      branch: config.branch,
-      sha,
-    },
-  });
-
-  return {
+    folder: "posts",
     slug: input.slug,
-  };
+    title: input.title,
+    markdown,
+    action: "update",
+    sha,
+  });
 }
 
 export async function deletePost(env: Env, input: DeletePostInput) {
-  const config = requireGitHubConfig(env);
-  const sha = await getPostFileSha(env, input.slug);
-
-  await githubRequest({
+  return deleteMarkdown({
     env,
-    method: "DELETE",
-    path: `contents/content/posts/${input.slug}.md`,
-    body: {
-      message: `Creator Studio: delete "${input.title}"`,
-      branch: config.branch,
-      sha,
-    },
+    folder: "posts",
+    slug: input.slug,
+    title: input.title,
+  });
+}
+
+export async function createArtwork(env: Env, input: CreateArtworkInput) {
+  const slug = slugify(input.title);
+  const createdAt = new Date().toISOString().slice(0, 10);
+
+  if (!slug) {
+    throw new Error("Could not generate slug from title.");
+  }
+
+  const markdown = createArtworkMarkdown({
+    title: input.title,
+    slug,
+    image: input.image ?? "",
+    description: input.description ?? "",
+    tags: input.tags ?? [],
+    period: input.period ?? "",
+    featured: input.featured ?? false,
+    story: input.story ?? "",
+    createdAt,
   });
 
-  return {
-    slug: input.slug,
-  };
+  return putMarkdown({
+    env,
+    folder: "artworks",
+    slug,
+    title: input.title,
+    markdown,
+    action: "create",
+  });
 }
