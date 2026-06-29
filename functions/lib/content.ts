@@ -388,7 +388,7 @@ async function deleteMarkdown({
 
 export async function createPost(env: Env, input: CreatePostInput) {
   const slug = slugify(input.title);
-  const createdAt = new Date().toISOString().slice(0, 10);
+  const createdAt = new Date().toISOString();
 
   if (!slug) {
     throw new Error("Could not generate slug from title.");
@@ -443,7 +443,7 @@ export async function deletePost(env: Env, input: DeletePostInput) {
 
 export async function createArtwork(env: Env, input: CreateArtworkInput) {
   const slug = slugify(input.title);
-  const createdAt = new Date().toISOString().slice(0, 10);
+  const createdAt = new Date().toISOString();
 
   if (!slug) {
     throw new Error("Could not generate slug from title.");
@@ -476,7 +476,7 @@ export async function createArtworkWithImage(
   input: CreateArtworkWithImageInput
 ) {
   const slug = slugify(input.title);
-  const createdAt = new Date().toISOString().slice(0, 10);
+  const createdAt = new Date().toISOString();
 
   if (!slug) {
     throw new Error("Could not generate slug from title.");

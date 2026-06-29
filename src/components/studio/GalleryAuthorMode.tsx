@@ -1,10 +1,77 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { useAuthorMode } from "@/components/author-mode/AuthorModeProvider";
 
 type SubmitState = "idle" | "saving" | "error";
+
+type PendingArtwork = {
+  title: string;
+  createdAt: number;
+};
+
+const PENDING_ARTWORKS_STORAGE_KEY = "gallery-pending-artworks";
+const PENDING_ARTWORK_TTL_MS = 10 * 60 * 1000;
+
+function getFreshPendingArtworks(artworks: PendingArtwork[]) {
+  const now = Date.now();
+
+  return artworks.filter(
+    (artwork) => now - artwork.createdAt < PENDING_ARTWORK_TTL_MS
+  );
+}
+
+function readPendingArtworksFromSessionStorage(): PendingArtwork[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const storedValue = window.sessionStorage.getItem(
+      PENDING_ARTWORKS_STORAGE_KEY
+    );
+
+    if (!storedValue) {
+      return [];
+    }
+
+    const parsedValue = JSON.parse(storedValue);
+
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return getFreshPendingArtworks(
+      parsedValue
+        .filter((item) => {
+          return (
+            typeof item === "object" &&
+            item !== null &&
+            typeof item.title === "string" &&
+            typeof item.createdAt === "number"
+          );
+        })
+        .map((item) => ({
+          title: item.title,
+          createdAt: item.createdAt,
+        }))
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writePendingArtworksToSessionStorage(artworks: PendingArtwork[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(
+    PENDING_ARTWORKS_STORAGE_KEY,
+    JSON.stringify(artworks)
+  );
+}
 
 export function GalleryAuthorMode() {
   const { isAuthorMode, studioSecret } = useAuthorMode();
@@ -12,10 +79,32 @@ export function GalleryAuthorMode() {
   const [isOpen, setIsOpen] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [message, setMessage] = useState("");
-  const [pendingArtworkTitle, setPendingArtworkTitle] = useState("");
+  const [pendingArtworks, setPendingArtworks] = useState<PendingArtwork[]>([]);
+
+  useEffect(() => {
+    const freshPendingArtworks = readPendingArtworksFromSessionStorage();
+
+    setPendingArtworks(freshPendingArtworks);
+    writePendingArtworksToSessionStorage(freshPendingArtworks);
+  }, []);
 
   if (!isAuthorMode) {
     return null;
+  }
+
+  function addPendingArtwork(title: string) {
+    const pendingArtwork: PendingArtwork = {
+      title,
+      createdAt: Date.now(),
+    };
+
+    const freshPendingArtworks = getFreshPendingArtworks([
+      pendingArtwork,
+      ...pendingArtworks,
+    ]);
+
+    setPendingArtworks(freshPendingArtworks);
+    writePendingArtworksToSessionStorage(freshPendingArtworks);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -48,7 +137,7 @@ export function GalleryAuthorMode() {
       }
 
       form.reset();
-      setPendingArtworkTitle(typeof title === "string" ? title : "");
+      addPendingArtwork(typeof title === "string" ? title : "Новая работа");
       setIsOpen(false);
       setSubmitState("idle");
       setMessage("");
@@ -82,15 +171,18 @@ export function GalleryAuthorMode() {
         </div>
       </button>
 
-      {pendingArtworkTitle ? (
-        <article className="min-h-[420px] rounded-md border border-dashed border-[#D8D1C7] bg-white/70 px-6 py-10">
+      {pendingArtworks.map((pendingArtwork) => (
+        <article
+          key={`${pendingArtwork.createdAt}-${pendingArtwork.title}`}
+          className="min-h-[420px] rounded-md border border-dashed border-[#D8D1C7] bg-white/70 px-6 py-10"
+        >
           <div className="flex h-full flex-col items-center justify-center text-center">
             <span className="font-serif text-5xl font-light text-[#8BA888]">
               ✦
             </span>
 
             <h2 className="mt-5 font-serif text-2xl font-light text-[#2C2A26]">
-              {pendingArtworkTitle}
+              {pendingArtwork.title}
             </h2>
 
             <p className="mt-3 max-w-[240px] text-sm leading-6 text-[#6E6A64]">
@@ -99,7 +191,7 @@ export function GalleryAuthorMode() {
             </p>
           </div>
         </article>
-      ) : null}
+      ))}
 
       {isOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2C2A26]/30 px-4 py-8 backdrop-blur-sm">
