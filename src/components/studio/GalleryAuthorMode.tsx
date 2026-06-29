@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 
 import { useAuthorMode } from "@/components/author-mode/AuthorModeProvider";
 
-type SubmitState = "idle" | "saving" | "success" | "error";
+type SubmitState = "idle" | "saving" | "error";
 
 export function GalleryAuthorMode() {
   const { isAuthorMode, studioSecret } = useAuthorMode();
@@ -50,7 +50,7 @@ export function GalleryAuthorMode() {
       form.reset();
       setPendingArtworkTitle(typeof title === "string" ? title : "");
       setIsOpen(false);
-      setSubmitState("success");
+      setSubmitState("idle");
       setMessage("");
     } catch {
       setSubmitState("error");
@@ -60,6 +60,28 @@ export function GalleryAuthorMode() {
 
   return (
     <>
+      <button
+        type="button"
+        onClick={() => {
+          setIsOpen(true);
+          setSubmitState("idle");
+          setMessage("");
+        }}
+        className="min-h-[420px] w-full rounded-md border border-dashed border-[#D8D1C7] bg-white/60 px-6 py-10 text-left transition hover:-translate-y-1 hover:bg-white"
+      >
+        <div className="flex h-full flex-col items-center justify-center text-center">
+          <span className="font-serif text-6xl font-light text-[#8BA888]">
+            ＋
+          </span>
+          <span className="mt-4 font-serif text-2xl font-light text-[#2C2A26]">
+            Добавить рисунок
+          </span>
+          <span className="mt-2 max-w-[220px] text-sm leading-6 text-[#6E6A64]">
+            Что сегодня появится в галерее?
+          </span>
+        </div>
+      </button>
+
       {pendingArtworkTitle ? (
         <article className="min-h-[420px] rounded-md border border-dashed border-[#D8D1C7] bg-white/70 px-6 py-10">
           <div className="flex h-full flex-col items-center justify-center text-center">
@@ -77,29 +99,7 @@ export function GalleryAuthorMode() {
             </p>
           </div>
         </article>
-      ) : (
-        <button
-          type="button"
-          onClick={() => {
-            setIsOpen(true);
-            setSubmitState("idle");
-            setMessage("");
-          }}
-          className="min-h-[420px] w-full rounded-md border border-dashed border-[#D8D1C7] bg-white/60 px-6 py-10 text-left transition hover:-translate-y-1 hover:bg-white"
-        >
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <span className="font-serif text-6xl font-light text-[#8BA888]">
-              ＋
-            </span>
-            <span className="mt-4 font-serif text-2xl font-light text-[#2C2A26]">
-              Добавить рисунок
-            </span>
-            <span className="mt-2 max-w-[220px] text-sm leading-6 text-[#6E6A64]">
-              Что сегодня появится в галерее?
-            </span>
-          </div>
-        </button>
-      )}
+      ) : null}
 
       {isOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2C2A26]/30 px-4 py-8 backdrop-blur-sm">
