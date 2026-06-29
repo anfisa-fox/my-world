@@ -43,6 +43,22 @@ export type CreateArtworkWithImageInput = {
   story?: string;
 };
 
+export type CreateCharacterInput = {
+  name: string;
+  avatar: string;
+  description: string;
+  gallery: string[];
+  body?: string;
+};
+
+export type CreateCharacterWithAvatarInput = {
+  name: string;
+  avatarFile: File;
+  description: string;
+  gallery?: string[];
+  body?: string;
+};
+
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
 const ALLOWED_IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"] as const;
@@ -188,6 +204,27 @@ featured: ${toYamlBoolean(featured)}
 createdAt: ${toYamlString(createdAt)}
 story: ${toYamlString(story ?? "")}
 ---
+`;
+}
+
+function createCharacterMarkdown({
+  name,
+  slug,
+  avatar,
+  description,
+  gallery,
+  body,
+  createdAt,
+}: CreateCharacterInput & { slug: string; createdAt: string }) {
+  return `---
+name: ${toYamlString(name)}
+avatar: ${toYamlString(avatar)}
+description: ${toYamlString(description)}
+gallery: ${toYamlStringArray(gallery)}
+createdAt: ${toYamlString(createdAt)}
+---
+
+${body ?? ""}
 `;
 }
 
@@ -513,6 +550,81 @@ export async function createArtworkWithImage(
     folder: "artworks",
     slug,
     title: input.title,
+    markdown,
+    action: "create",
+  });
+}
+
+export async function createCharacter(env: Env, input: CreateCharacterInput) {
+  const slug = slugify(input.name);
+  const createdAt = new Date().toISOString();
+
+  if (!slug) {
+    throw new Error("Could not generate slug from name.");
+  }
+
+  const markdown = createCharacterMarkdown({
+    name: input.name,
+    slug,
+    avatar: input.avatar ?? "",
+    description: input.description ?? "",
+    gallery: input.gallery ?? [],
+    body: input.body ?? "",
+    createdAt,
+  });
+
+  return putMarkdown({
+    env,
+    folder: "characters",
+    slug,
+    title: input.name,
+    markdown,
+    action: "create",
+  });
+}
+
+export async function createCharacterWithAvatar(
+  env: Env,
+  input: CreateCharacterWithAvatarInput
+) {
+  const slug = slugify(input.name);
+  const createdAt = new Date().toISOString();
+
+  if (!slug) {
+    throw new Error("Could not generate slug from name.");
+  }
+
+  await validateImageFile(input.avatarFile);
+
+  const extension = getImageExtension(input.avatarFile);
+  const avatarPath = `/images/characters/${slug}/avatar.${extension}`;
+  const repositoryAvatarPath = `public/images/characters/${slug}/avatar.${extension}`;
+  const avatarContent = encodeArrayBufferBase64(
+    await input.avatarFile.arrayBuffer()
+  );
+
+  await putBinaryFile({
+    env,
+    path: repositoryAvatarPath,
+    title: input.name,
+    content: avatarContent,
+  });
+
+  const markdown = createCharacterMarkdown({
+    name: input.name,
+    slug,
+    avatar: avatarPath,
+    description: input.description ?? "",
+    gallery: input.gallery ?? [],
+    body: input.body ?? "",
+    createdAt,
+  });
+
+  return putMarkdown({
+    env,
+    folder: "characters",
+    slug,
+    title: input.name,
     markdown,
     action: "create",
   });

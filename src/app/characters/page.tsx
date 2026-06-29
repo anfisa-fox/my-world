@@ -1,9 +1,13 @@
 import Link from "next/link";
 
+import { CharactersAuthorMode } from "@/components/studio/CharactersAuthorMode";
 import { getAllCharacters } from "@/lib/characters";
 
 export default function CharactersPage() {
   const characters = getAllCharacters();
+  const publishedCharacterSlugs = characters.map(
+    (character) => character.slug
+  );
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
@@ -12,6 +16,10 @@ export default function CharactersPage() {
       </h1>
 
       <div className="space-y-6">
+        <CharactersAuthorMode
+          publishedCharacterSlugs={publishedCharacterSlugs}
+        />
+
         {characters.map((character) => (
           <Link
             key={character.slug}
