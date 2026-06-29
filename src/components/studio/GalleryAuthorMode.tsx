@@ -7,6 +7,7 @@ import { useAuthorMode } from "@/components/author-mode/AuthorModeProvider";
 type SubmitState = "idle" | "saving" | "error";
 
 type PendingArtwork = {
+  id: string;
   title: string;
   createdAt: number;
 };
@@ -14,12 +15,45 @@ type PendingArtwork = {
 const PENDING_ARTWORKS_STORAGE_KEY = "gallery-pending-artworks";
 const PENDING_ARTWORK_TTL_MS = 10 * 60 * 1000;
 
+function createPendingArtworkId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function getFreshPendingArtworks(artworks: PendingArtwork[]) {
   const now = Date.now();
 
   return artworks.filter(
     (artwork) => now - artwork.createdAt < PENDING_ARTWORK_TTL_MS
   );
+}
+
+function parsePendingArtwork(item: unknown): PendingArtwork | null {
+  if (typeof item !== "object" || item === null) {
+    return null;
+  }
+
+  if (!("title" in item) || typeof item.title !== "string") {
+    return null;
+  }
+
+  if (!("createdAt" in item) || typeof item.createdAt !== "number") {
+    return null;
+  }
+
+  const id =
+    "id" in item && typeof item.id === "string"
+      ? item.id
+      : `${item.createdAt}-${item.title}`;
+
+  return {
+    id,
+    title: item.title,
+    createdAt: item.createdAt,
+  };
 }
 
 function readPendingArtworksFromSessionStorage(): PendingArtwork[] {
@@ -44,18 +78,8 @@ function readPendingArtworksFromSessionStorage(): PendingArtwork[] {
 
     return getFreshPendingArtworks(
       parsedValue
-        .filter((item) => {
-          return (
-            typeof item === "object" &&
-            item !== null &&
-            typeof item.title === "string" &&
-            typeof item.createdAt === "number"
-          );
-        })
-        .map((item) => ({
-          title: item.title,
-          createdAt: item.createdAt,
-        }))
+        .map((item) => parsePendingArtwork(item))
+        .filter((item): item is PendingArtwork => item !== null)
     );
   } catch {
     return [];
@@ -69,7 +93,7 @@ function writePendingArtworksToSessionStorage(artworks: PendingArtwork[]) {
 
   window.sessionStorage.setItem(
     PENDING_ARTWORKS_STORAGE_KEY,
-    JSON.stringify(artworks)
+    JSON.stringify(getFreshPendingArtworks(artworks))
   );
 }
 
@@ -94,17 +118,21 @@ export function GalleryAuthorMode() {
 
   function addPendingArtwork(title: string) {
     const pendingArtwork: PendingArtwork = {
+      id: createPendingArtworkId(),
       title,
       createdAt: Date.now(),
     };
 
-    const freshPendingArtworks = getFreshPendingArtworks([
-      pendingArtwork,
-      ...pendingArtworks,
-    ]);
+    setPendingArtworks((currentPendingArtworks) => {
+      const freshPendingArtworks = getFreshPendingArtworks([
+        pendingArtwork,
+        ...currentPendingArtworks,
+      ]);
 
-    setPendingArtworks(freshPendingArtworks);
-    writePendingArtworksToSessionStorage(freshPendingArtworks);
+      writePendingArtworksToSessionStorage(freshPendingArtworks);
+
+      return freshPendingArtworks;
+    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -173,7 +201,7 @@ export function GalleryAuthorMode() {
 
       {pendingArtworks.map((pendingArtwork) => (
         <article
-          key={`${pendingArtwork.createdAt}-${pendingArtwork.title}`}
+          key={pendingArtwork.id}
           className="min-h-[420px] rounded-md border border-dashed border-[#D8D1C7] bg-white/70 px-6 py-10"
         >
           <div className="flex h-full flex-col items-center justify-center text-center">
