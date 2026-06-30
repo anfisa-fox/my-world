@@ -1,7 +1,7 @@
 ---
-title: "Тест 11"
+title: "Тест 11 (редактирование с заменой картинки)"
 slug: "test-11"
-image: "/images/artworks/test-11.jpg"
+image: "/images/artworks/test-11.png"
 description: ""
 tags: []
 period: ""
