@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { AuthorCharacterActions } from "@/components/author-mode/AuthorCharacterActions";
 import { getAllCharacters, getCharacterBySlug } from "@/lib/characters";
 import { formatDate } from "@/lib/formatDate";
 
@@ -34,6 +35,16 @@ export default async function CharacterPage({
       <h1 className="mb-6 font-serif text-5xl font-light text-[#2C2A26]">
         {character.name}
       </h1>
+
+      <AuthorCharacterActions
+        slug={character.slug}
+        name={character.name}
+        avatar={character.avatar}
+        description={character.description}
+        gallery={character.gallery}
+        body=""
+        createdAt={character.createdAt}
+      />
 
       <img
         src={character.avatar}

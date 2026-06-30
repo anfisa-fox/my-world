@@ -82,6 +82,27 @@ export type CreateCharacterWithAvatarInput = {
   body?: string;
 };
 
+export type UpdateCharacterInput = {
+  slug: string;
+  name: string;
+  avatar: string;
+  description: string;
+  gallery: string[];
+  body?: string;
+  createdAt: string;
+};
+
+export type DeleteCharacterInput = {
+  slug: string;
+  name: string;
+};
+
+export type UploadCharacterAvatarInput = {
+  slug: string;
+  name: string;
+  avatarFile: File;
+};
+
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
 const ALLOWED_IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"] as const;
@@ -658,6 +679,31 @@ export async function createCharacter(env: Env, input: CreateCharacterInput) {
   });
 }
 
+export async function uploadCharacterAvatar(
+  env: Env,
+  input: UploadCharacterAvatarInput
+) {
+  await validateImageFile(input.avatarFile);
+
+  const extension = getImageExtension(input.avatarFile);
+  const avatarPath = `/images/characters/${input.slug}/avatar.${extension}`;
+  const repositoryAvatarPath = `public/images/characters/${input.slug}/avatar.${extension}`;
+  const avatarContent = encodeArrayBufferBase64(
+    await input.avatarFile.arrayBuffer()
+  );
+
+  await putBinaryFile({
+    env,
+    path: repositoryAvatarPath,
+    title: input.name,
+    content: avatarContent,
+  });
+
+  return {
+    avatarPath,
+  };
+}
+
 export async function createCharacterWithAvatar(
   env: Env,
   input: CreateCharacterWithAvatarInput
@@ -669,20 +715,10 @@ export async function createCharacterWithAvatar(
     throw new Error("Could not generate slug from name.");
   }
 
-  await validateImageFile(input.avatarFile);
-
-  const extension = getImageExtension(input.avatarFile);
-  const avatarPath = `/images/characters/${slug}/avatar.${extension}`;
-  const repositoryAvatarPath = `public/images/characters/${slug}/avatar.${extension}`;
-  const avatarContent = encodeArrayBufferBase64(
-    await input.avatarFile.arrayBuffer()
-  );
-
-  await putBinaryFile({
-    env,
-    path: repositoryAvatarPath,
-    title: input.name,
-    content: avatarContent,
+  const { avatarPath } = await uploadCharacterAvatar(env, {
+    slug,
+    name: input.name,
+    avatarFile: input.avatarFile,
   });
 
   const markdown = createCharacterMarkdown({
@@ -702,5 +738,38 @@ export async function createCharacterWithAvatar(
     title: input.name,
     markdown,
     action: "create",
+  });
+}
+
+export async function updateCharacter(env: Env, input: UpdateCharacterInput) {
+  const sha = await getFileSha(env, "characters", input.slug);
+
+  const markdown = createCharacterMarkdown({
+    name: input.name,
+    slug: input.slug,
+    avatar: input.avatar ?? "",
+    description: input.description ?? "",
+    gallery: input.gallery ?? [],
+    body: input.body ?? "",
+    createdAt: input.createdAt,
+  });
+
+  return putMarkdown({
+    env,
+    folder: "characters",
+    slug: input.slug,
+    title: input.name,
+    markdown,
+    action: "update",
+    sha,
+  });
+}
+
+export async function deleteCharacter(env: Env, input: DeleteCharacterInput) {
+  return deleteMarkdown({
+    env,
+    folder: "characters",
+    slug: input.slug,
+    title: input.name,
   });
 }
