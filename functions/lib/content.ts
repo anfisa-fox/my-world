@@ -376,6 +376,45 @@ async function getFileSha(env: Env, folder: string, slug: string) {
   return data.sha;
 }
 
+async function getRepositoryFileShaIfExists(env: Env, path: string) {
+  const config = requireGitHubConfig(env);
+
+  const response = await fetch(
+    `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}?ref=${config.branch}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${config.token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+        "User-Agent": "personal-creative-world",
+      },
+    }
+  );
+
+  if (response.status === 404) {
+    return undefined;
+  }
+
+  if (!response.ok) {
+    throw new Error(`GitHub request failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    Array.isArray(data) ||
+    !("sha" in data) ||
+    typeof data.sha !== "string"
+  ) {
+    return undefined;
+  }
+
+  return data.sha;
+}
+
 async function putMarkdown({
   env,
   folder,
@@ -424,6 +463,7 @@ async function putBinaryFile({
   content: string;
 }) {
   const config = requireGitHubConfig(env);
+  const sha = await getRepositoryFileShaIfExists(env, path);
 
   await githubRequest({
     env,
@@ -433,6 +473,7 @@ async function putBinaryFile({
       message: `Creator Studio: upload image for "${title}"`,
       content,
       branch: config.branch,
+      ...(sha ? { sha } : {}),
     },
   });
 }
