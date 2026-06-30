@@ -1,308 +1,324 @@
 # CURRENT_IMPLEMENTATION
 
-Version: 2.0
-
-Status: Active
-
-Last Updated: 2026-06-29
+**Project:** My World
+**Status:** MVP 1.0 (Active Development)
+**Last Updated:** 2026-06-30
 
 ---
 
-# Назначение документа
+# Project Overview
 
-Данный документ является техническим паспортом проекта.
+**My World** — персональный творческий сайт для публикации иллюстраций, персонажей и историй.
 
-Его задача — зафиксировать текущее фактическое состояние реализации проекта.
+Проект разрабатывается как специализированная авторская платформа, а не как универсальная CMS.
 
-В отличие от `PROJECT_CONTEXT.md`, данный документ регулярно обновляется после завершения Sprint и содержит только подтверждённые факты.
-
-Документ не содержит продуктовых идей, архитектурных гипотез или планов развития.
+Основная цель MVP — предоставить автору возможность самостоятельно публиковать новый контент без использования Git, GitHub и программирования.
 
 ---
 
-# Текущее состояние проекта
-
-## Общий статус
-
-Проект находится в состоянии **Production MVP**.
-
-Основной сайт опубликован и работает в production.
-
-Публичная часть проекта доступна пользователям.
-
-Author Mode находится в активной разработке (Creator Studio Sprint 2).
-
----
-
-# Production Architecture
+# Technology Stack
 
 ## Frontend
 
-* Next.js (Static Export)
-* React
+* Next.js 16
+* React 19
 * TypeScript
 * Tailwind CSS
 
----
+## Runtime
 
-## Backend
-
-Cloudflare Pages Functions.
-
-Вся production-логика Author Mode выполняется через Cloudflare Functions.
-
----
+* Static Export
+* Cloudflare Pages
+* Cloudflare Pages Functions
 
 ## Storage
 
-GitHub Repository.
-
-Контент хранится исключительно в Markdown.
-
-GitHub остаётся единственным Source of Truth.
+* GitHub Repository
+* Markdown Files
+* Media Files
 
 ---
 
-## Deployment
+# Supported Content Types
 
-Production Pipeline:
+В настоящий момент Creator Studio поддерживает три доменных типа контента.
 
-```text
-GitHub Repository
-        │
-        ▼
-Cloudflare Pages Build
-        │
-        ▼
-Production Website
-```
-
-Публикация выполняется автоматически после изменения репозитория.
+| Content Type | Status |
+| ------------ | ------ |
+| Gallery      | ✅      |
+| Characters   | ✅      |
+| Wall         | ✅      |
 
 ---
 
-# Текущее состояние функциональности
-
-## Public Website
-
-Реализованы:
-
-* Home
-* Gallery
-* Characters
-* Wall
-
----
-
-## Author Mode
-
-Реализовано:
-
-* вход через Studio Secret;
-* создание новой записи Wall;
-* автоматическая генерация slug;
-* создание Markdown;
-* автоматическая публикация через GitHub;
-* автоматический Cloudflare Deployment.
-
----
-
-## Creator Studio Sprint 2
-
-На момент обновления документа реализуется расширение Author Mode на Gallery и Characters.
-
-Работы находятся в процессе.
-
----
-
-# Canonical Repository Structure
-
-## Контент
-
-```text
-content/
-
-artworks/
-characters/
-posts/
-_archive/
-```
-
----
-
-## Frontend
-
-```text
-src/app/
-
-page.tsx
-gallery/
-characters/
-wall/
-studio/
-```
-
----
-
-## Cloudflare Backend
-
-```text
-functions/
-
-api/
-studio/
-
-auth/
-gallery/
-posts/
-
-lib/
-content.ts
-```
-
-Cloudflare Functions являются канонической production-реализацией backend.
-
----
-
-## Documentation
-
-Основные документы проекта находятся в каталоге:
-
-```text
-docs/
-```
-
-Документация разделена на:
-
-* Product
-* Architecture
-* Development
-* Audits
-* Planning
-
----
-
-# Канонические реализации
-
-## Public Website
-
-Канонической реализацией пользовательского сайта является каталог:
-
-```text
-src/app/
-```
-
----
-
-## Backend
-
-Канонической production-реализацией backend является каталог:
-
-```text
-functions/
-```
-
-Next.js API Routes сохраняются только для совместимости и локальной разработки.
-
-Новые production endpoint'ы реализуются исключительно через Cloudflare Pages Functions.
-
----
-
-## Content Repository
-
-Общий backend-слой расположен в:
-
-```text
-functions/lib/content.ts
-```
-
-Он отвечает за:
-
-* работу с GitHub API;
-* создание Markdown;
-* обновление Markdown;
-* удаление Markdown;
-* общие операции публикации.
-
----
-
-# Текущее состояние контента
+# Content Domains
 
 ## Gallery
 
-Контент хранится в:
+Назначение:
 
-```text
-content/artworks/
-```
+Публикация художественных работ.
+
+Хранение:
+
+* Markdown
+* Cover Image
+* Description
+* Story
+* Metadata
+
+Реализовано:
+
+* список работ;
+* страница работы;
+* Author Mode;
+* публикация через Creator Studio.
 
 ---
 
 ## Characters
 
-Контент хранится в:
+Назначение:
 
-```text
-content/characters/
-```
+Публикация персонажей авторского мира.
+
+Хранение:
+
+* Markdown
+* Avatar
+* Gallery
+* Description
+* Body
+
+Реализовано:
+
+* список персонажей;
+* страница персонажа;
+* Author Mode;
+* публикация через Creator Studio.
 
 ---
 
 ## Wall
 
-Контент хранится в:
+Назначение:
+
+Публикация коротких записей и новостей мира.
+
+Хранение:
+
+* Markdown
+* Optional Image
+* Body
+
+Реализовано:
+
+* список публикаций;
+* страница публикации;
+* Author Mode;
+* публикация через Creator Studio.
+
+---
+
+# Creator Studio
+
+**Creator Studio является платформой публикации контента.**
+
+Каждый тип контента имеет собственную доменную модель, но использует единую инфраструктуру публикации.
+
+В настоящий момент реализованы:
+
+* Gallery Author Mode
+* Characters Author Mode
+* Wall Author Mode
+
+---
+
+# Current Platform State
+
+На текущий момент подтверждены следующие платформенные возможности:
+
+* единая авторизация через Studio Secret;
+* единый механизм Author Mode;
+* единая публикация через Cloudflare Pages Functions;
+* генерация Markdown;
+* генерация slug;
+* загрузка изображений;
+* публикация в GitHub Repository;
+* автоматический Cloudflare Deployment;
+* Pending Publications;
+* единое поведение пользовательского интерфейса между всеми реализованными типами контента.
+
+---
+
+# Markdown Models
+
+Для каждого типа контента используется собственная Markdown-модель.
+
+## Gallery
+
+Поддерживаются:
+
+* frontmatter;
+* story;
+* metadata.
+
+---
+
+## Characters
+
+Поддерживаются:
+
+* name;
+* avatar;
+* gallery;
+* description;
+* createdAt;
+* body.
+
+Body является частью канонической Markdown-модели персонажа.
+
+Минимальная форма Author Mode может собирать только необходимый для MVP набор данных, не изменяя модель хранения.
+
+---
+
+## Wall
+
+Поддерживаются:
+
+* title;
+* image;
+* createdAt;
+* body.
+
+---
+
+# Pending Publications
+
+Во всех Author Mode используется единый механизм Pending Publications.
+
+Поддерживается:
+
+* отображение placeholder сразу после публикации;
+* хранение состояния в sessionStorage;
+* автоматическое исчезновение placeholder после появления опубликованного контента;
+* поддержка нескольких одновременно ожидающих публикаций;
+* автоматическая очистка устаревших записей (TTL).
+
+Поведение унифицировано между Gallery, Characters и Wall.
+
+---
+
+# Production Publishing Pipeline
+
+Во всех реализованных типах контента используется единый Production Publishing Pipeline.
+
+Последовательность публикации:
 
 ```text
-content/posts/
+Author Mode
+        │
+        ▼
+Cloudflare Pages Function
+        │
+        ▼
+GitHub Repository
+        │
+        ▼
+Automatic Commit
+        │
+        ▼
+Cloudflare Pages Deployment
+        │
+        ▼
+Published Site
 ```
 
----
+В ходе Sprint 3 данный pipeline подтверждён практической публикацией нового персонажа.
 
-# Известные ограничения
-
-На текущем этапе проекта:
-
-* отсутствует база данных;
-* отсутствует сервер Next.js;
-* отсутствует универсальная CMS;
-* отсутствует универсальный редактор контента;
-* отсутствует загрузка изображений через Author Mode.
-
-Все ограничения являются осознанными архитектурными решениями MVP.
+Один и тот же Production Publishing Pipeline используется всеми реализованными типами контента.
 
 ---
 
-# Известный технический долг
+# Content Ordering
 
-Технический долг фиксируется только после отдельного архитектурного решения.
+Во всех публичных разделах используется единое правило сортировки.
 
-На момент обновления документа критический технический долг отсутствует.
+Поддерживается:
 
----
+* сортировка по `createdAt`;
+* новые материалы отображаются сверху;
+* более старые материалы отображаются ниже.
 
-# Следующее безопасное изменение
+Правило применяется для:
 
-Следующим безопасным этапом разработки является продолжение Creator Studio Sprint 2.
-
-В рамках утверждённого Scope допускается:
-
-* завершение Gallery Author Mode;
-* реализация Author Mode для Characters;
-* развитие существующего Content Repository Layer.
-
-Изменение архитектурных принципов проекта в рамках Sprint 2 не допускается.
+* Gallery;
+* Characters;
+* Wall.
 
 ---
 
-# Правила работы с проектом
+# Implemented Architecture Principles
 
-Перед внесением изменений разработчик обязан:
+На текущем этапе проекта подтверждены следующие архитектурные принципы.
 
-1. Ознакомиться с `PROJECT_CONTEXT.md`.
-2. Ознакомиться с данным документом.
-3. Ознакомиться с `CURRENT_SPRINT.md`.
-4. Подтвердить понимание текущего состояния проекта.
-5. Назвать файлы, которые предполагается изменить.
-6. Только после этого приступать к реализации.
+## Domain Separation
 
-Данный документ является основным источником информации о текущем техническом состоянии проекта.
+Каждый тип контента имеет собственную доменную модель и собственный пользовательский интерфейс.
+
+---
+
+## Infrastructure Reuse
+
+Инфраструктурные механизмы максимально переиспользуются между всеми реализованными доменами.
+
+---
+
+## Minimal Domain Extensions
+
+Добавление нового типа контента требует изменения только доменной логики.
+
+Общие инфраструктурные механизмы сохраняются без изменений.
+
+---
+
+## Consistent Author Experience
+
+Поведение Creator Studio остаётся единым независимо от публикуемого типа контента.
+
+---
+
+# Current System State
+
+На текущий момент полностью реализованы:
+
+* Gallery Author Mode;
+* Characters Author Mode;
+* Wall Author Mode.
+
+Практической эксплуатацией подтверждены:
+
+* публикация Markdown;
+* загрузка изображений;
+* GitHub Publishing;
+* Automatic Deployment;
+* Pending Publications;
+* единая сортировка контента;
+* повторное использование платформенной инфраструктуры между всеми реализованными доменами.
+
+---
+
+# Verified Platform Capabilities
+
+В ходе реализации и production-проверки подтверждены следующие возможности платформы:
+
+* Author Mode;
+* Cloudflare Pages Functions;
+* Markdown Generation;
+* Image Upload;
+* GitHub Publishing;
+* Pending Publications;
+* Automatic Cloudflare Deployment;
+* единое поведение платформы для Gallery, Characters и Wall.
+
+Данный документ отражает текущее состояние реализации проекта и является базовой точкой входа для разработчиков, подключающихся к проекту.

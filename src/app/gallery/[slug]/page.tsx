@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { AuthorArtworkActions } from "@/components/author-mode/AuthorArtworkActions";
 import { getAllArtworks, getArtworkBySlug } from "@/lib/artworks";
 import { formatDate } from "@/lib/formatDate";
 
@@ -33,6 +34,18 @@ export default async function ArtworkPage({ params }: PageProps) {
         {artwork.title}
       </h1>
 
+      <AuthorArtworkActions
+        slug={artwork.slug}
+        title={artwork.title}
+        image={artwork.image}
+        description={artwork.description}
+        tags={artwork.tags}
+        period={artwork.period}
+        featured={artwork.featured}
+        createdAt={artwork.createdAt}
+        story={artwork.story}
+      />
+
       <img
         src={artwork.image}
         alt={artwork.title}
@@ -61,7 +74,7 @@ export default async function ArtworkPage({ params }: PageProps) {
       </div>
 
       {artwork.story && (
-        <article className="max-w-none text-base leading-8 text-[#3E3A34]">
+        <article className="max-w-none whitespace-pre-wrap text-base leading-8 text-[#3E3A34]">
           {artwork.story}
         </article>
       )}

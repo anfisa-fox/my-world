@@ -43,6 +43,29 @@ export type CreateArtworkWithImageInput = {
   story?: string;
 };
 
+export type UpdateArtworkInput = {
+  slug: string;
+  title: string;
+  image: string;
+  description: string;
+  tags: string[];
+  period: string;
+  featured: boolean;
+  story?: string;
+  createdAt: string;
+};
+
+export type DeleteArtworkInput = {
+  slug: string;
+  title: string;
+};
+
+export type UploadArtworkImageInput = {
+  slug: string;
+  title: string;
+  imageFile: File;
+};
+
 export type CreateCharacterInput = {
   name: string;
   avatar: string;
@@ -508,6 +531,31 @@ export async function createArtwork(env: Env, input: CreateArtworkInput) {
   });
 }
 
+export async function uploadArtworkImage(
+  env: Env,
+  input: UploadArtworkImageInput
+) {
+  await validateImageFile(input.imageFile);
+
+  const extension = getImageExtension(input.imageFile);
+  const imagePath = `/images/artworks/${input.slug}.${extension}`;
+  const repositoryImagePath = `public/images/artworks/${input.slug}.${extension}`;
+  const imageContent = encodeArrayBufferBase64(
+    await input.imageFile.arrayBuffer()
+  );
+
+  await putBinaryFile({
+    env,
+    path: repositoryImagePath,
+    title: input.title,
+    content: imageContent,
+  });
+
+  return {
+    imagePath,
+  };
+}
+
 export async function createArtworkWithImage(
   env: Env,
   input: CreateArtworkWithImageInput
@@ -519,18 +567,10 @@ export async function createArtworkWithImage(
     throw new Error("Could not generate slug from title.");
   }
 
-  await validateImageFile(input.imageFile);
-
-  const extension = getImageExtension(input.imageFile);
-  const imagePath = `/images/artworks/${slug}.${extension}`;
-  const repositoryImagePath = `public/images/artworks/${slug}.${extension}`;
-  const imageContent = encodeArrayBufferBase64(await input.imageFile.arrayBuffer());
-
-  await putBinaryFile({
-    env,
-    path: repositoryImagePath,
+  const { imagePath } = await uploadArtworkImage(env, {
+    slug,
     title: input.title,
-    content: imageContent,
+    imageFile: input.imageFile,
   });
 
   const markdown = createArtworkMarkdown({
@@ -552,6 +592,41 @@ export async function createArtworkWithImage(
     title: input.title,
     markdown,
     action: "create",
+  });
+}
+
+export async function updateArtwork(env: Env, input: UpdateArtworkInput) {
+  const sha = await getFileSha(env, "artworks", input.slug);
+
+  const markdown = createArtworkMarkdown({
+    title: input.title,
+    slug: input.slug,
+    image: input.image ?? "",
+    description: input.description ?? "",
+    tags: input.tags ?? [],
+    period: input.period ?? "",
+    featured: input.featured ?? false,
+    story: input.story ?? "",
+    createdAt: input.createdAt,
+  });
+
+  return putMarkdown({
+    env,
+    folder: "artworks",
+    slug: input.slug,
+    title: input.title,
+    markdown,
+    action: "update",
+    sha,
+  });
+}
+
+export async function deleteArtwork(env: Env, input: DeleteArtworkInput) {
+  return deleteMarkdown({
+    env,
+    folder: "artworks",
+    slug: input.slug,
+    title: input.title,
   });
 }
 
