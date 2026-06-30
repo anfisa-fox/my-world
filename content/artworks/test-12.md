@@ -1,8 +1,8 @@
 ---
-title: "Тест 12"
+title: "Тест 12 (редактированный)"
 slug: "test-12"
 image: "/images/artworks/test-12.jpg"
-description: ""
+description: "Редактирование"
 tags: []
 period: ""
 featured: false
