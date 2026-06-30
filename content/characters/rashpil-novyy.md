@@ -1,5 +1,5 @@
 ---
-name: "Рашпиль (новый)"
+name: "Рашпиль (замена кратинки)"
 avatar: "/images/characters/rashpil-novyy/avatar.png"
 description: ""
 gallery: []
